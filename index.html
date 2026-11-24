@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>⚡ Auksion — Jonli Savdo</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #08090e;
+    --surface: #11131d;
+    --surface-2: #181b29;
+    --surface-3: #22263a;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hi: rgba(255, 255, 255, 0.18);
+    --text: #f4f6fb;
+    --muted: #8e95ab;
+    --accent: #f59e0b;
+    --accent-2: #38bdf8;
+    --ok: #22c55e;
+    --bad: #ef4444;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body {
+    padding-top: calc(12px + var(--safe-top));
+    padding-bottom: calc(84px + var(--safe-bot));
+    background-image:
+      radial-gradient(ellipse 75% 40% at 50% -8%, rgba(245, 158, 11, 0.14), transparent 70%),
+      radial-gradient(circle at 90% 18%, rgba(56, 189, 248, 0.09), transparent 55%);
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 0 14px;
+  }
+
+  .num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12.5px; }
+  .hidden { display: none !important; }
+
+  /* Topbar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .user-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #272c42, #151824);
+    border: 1px solid var(--border-hi);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .user-name {
+    font-weight: 800;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bal-pill {
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.08));
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fde68a;
+    font-weight: 800;
+    font-size: 13.5px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 16px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  .card + .card { margin-top: 12px; }
+
+  .sec-title {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Lot Card */
+  .lot-card {
+    background: linear-gradient(180deg, rgba(24, 27, 41, 0.95), rgba(17, 19, 29, 0.98));
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.14s ease, border-color 0.18s ease;
+  }
+
+  .lot-card + .lot-card { margin-top: 12px; }
+  .lot-card:active { transform: scale(0.99); border-color: var(--border-hi); }
+
+  .lot-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .lot-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.14);
+    color: #7dd3fc;
+    border: 1px solid rgba(56, 189, 248, 0.28);
+  }
+
+  .timer-badge {
+    font-size: 12.5px;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    white-space: nowrap;
+  }
+
+  .timer-badge.urgent {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.45);
+  }
+
+  .lot-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 8px;
+  }
+
+  .lot-desc {
+    color: var(--muted);
+    font-size: 13.5px;
+    margin-top: 4px;
+  }
+
+  .lot-price-box {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .lot-price {
+    font-size: 20px;
+    font-weight: 900;
+    color: #fde68a;
+  }
+
+  .lot-leader {
+    font-size: 12.5px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* Buttons & Inputs */
+  .btn {
+    appearance: none;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: transform 0.13s ease, opacity 0.18s ease, background 0.18s ease;
+  }
+
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-block { width: 100%; }
+  .btn-sm { padding: 9px 12px; font-size: 13px; border-radius: 11px; }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #0b0d14;
+  }
+
+  .btn-sec {
+    background: var(--surface-3);
+    color: var(--text);
+    border-color: var(--border-hi);
+  }
+
+  .btn-ok {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+
+  .btn-bad {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+  .field { margin-top: 12px; }
+  .label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+
+  .input, .select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border-hi);
+    border-radius: 14px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    outline: none;
+  }
+
+  .input:focus, .select:focus {
+    border-color: var(--accent);
+  }
+
+  /* Captcha Box */
+  .captcha-box {
+    margin: 14px 0;
+    padding: 14px;
+    border-radius: 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-hi);
+  }
+
+  .captcha-eq {
+    font-size: 24px;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 0.04em;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: 1px dashed rgba(245, 158, 11, 0.5);
+    color: #fde68a;
+    margin-bottom: 10px;
+  }
+
+  .captcha-opts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .cap-opt {
+    padding: 11px;
+    border-radius: 12px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .cap-opt.picked {
+    background: var(--accent);
+    color: #090a0f;
+    border-color: var(--accent);
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-box {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .stat-val { font-size: 22px; font-weight: 900; margin-top: 4px; }
+
+  /* Bottom Nav */
+  .nav {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 40;
+    background: rgba(13, 15, 24, 0.88);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--border);
+    padding: 8px 6px calc(8px + var(--safe-bot));
+  }
+
+  .nav-inner {
+    max-width: 520px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .nav-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 2px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+  }
+
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 20px; height: 20px; stroke-width: 2; }
+
+  /* Sheet Modal */
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .backdrop.open { display: flex; }
+
+  .sheet {
+    width: 100%;
+    max-width: 520px;
+    max-height: 88vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border-hi);
+    border-radius: 26px 26px 0 0;
+    padding: 14px 16px calc(22px + var(--safe-bot));
+  }
+
+  .sheet-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .sheet-title { font-size: 18px; font-weight: 900; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    top: calc(14px + var(--safe-top));
+    left: 50%;
+    transform: translate(-50%, -150%);
+    z-index: 90;
+    background: var(--surface-3);
+    color: var(--text);
+    border: 1px solid var(--border-hi);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 800;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+    transition: transform 0.24s ease;
+    max-width: calc(100vw - 28px);
+    text-align: center;
+  }
+
+  .toast.show { transform: translate(-50%, 0); }
+
+  .list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .list-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .list-row:first-child { padding-top: 0; }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- CAPTCHA Ro'yxatdan o'tish ekrani -->
+<div id="captchaGate" class="wrap hidden" style="padding-top:24px;">
+  <div class="card" style="text-align:center;">
+    <div style="font-size:36px;">🛡️</div>
+    <h1 style="font-size:22px;font-weight:900;margin-top:8px;">CAPTCHA tasdiqlash</h1>
+    <p class="muted small" style="margin-top:6px;">Auksionda qatnashish va garov tikish uchun robot emasligingizni tasdiqlang.</p>
+
+    <div class="captcha-box">
+      <div id="captchaEq" class="captcha-eq num">7 + 5 = ?</div>
+      <div id="captchaOpts" class="captcha-opts"></div>
+      <button id="refreshCaptchaBtn" type="button" class="btn btn-sec btn-sm btn-block" style="margin-top:10px;">🔄 Boshqa misol</button>
+    </div>
+
+    <div class="field" style="text-align:left;">
+      <label class="label" for="regNameInput">Ismingiz</label>
+      <input id="regNameInput" class="input" type="text" placeholder="Ismingizni kiriting" />
+    </div>
+
+    <div class="field" style="text-align:left;">
+      <label class="label" for="regPhoneInput">Telefon raqam (ixtiyoriy)</label>
+      <input id="regPhoneInput" class="input num" type="tel" placeholder="+998 90 123 45 67" />
+    </div>
+
+    <button id="verifyCaptchaBtn" type="button" class="btn btn-gold btn-block" style="margin-top:16px;">✅ Ro‘yxatdan o‘tish</button>
+  </div>
+</div>
+
+<!-- Asosiy ilova -->
+<main id="mainApp" class="wrap hidden">
+  <header class="topbar">
+    <div class="user-box">
+      <div id="hdrAvatar" class="avatar">A</div>
+      <div style="min-width:0;">
+        <div id="hdrName" class="user-name">Foydalanuvchi</div>
+        <div id="hdrRole" class="muted small">Ishtirokchi</div>
+      </div>
+    </div>
+    <div id="hdrBalance" class="bal-pill num">0 so‘m</div>
+  </header>
+
+  <div id="tabContent"></div>
+</main>
+
+<!-- Pastki menyu -->
+<nav id="bottomNav" class="nav hidden">
+  <div id="navInner" class="nav-inner"></div>
+</nav>
+
+<!-- Bottom Sheet -->
+<div id="sheetBackdrop" class="backdrop">
+  <div class="sheet">
+    <div class="sheet-top">
+      <div id="sheetTitle" class="sheet-title"></div>
+      <button id="sheetClose" type="button" class="btn btn-sec btn-sm">✕</button>
+    </div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // Agar server (Python) ulasangiz shu yerga manzilini yozing, masalan: "https://sizning-server.uz"
+  // Bo'sh qoldirilsa, GitHub Pages'da to'g'ridan-to'g'ri avtonom rejimda ishlaydi!
+  const BACKEND_API = "";
+
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if (tg) {
+    try {
+      tg.ready();
+      tg.expand();
+      if (tg.setHeaderColor) tg.setHeaderColor("#08090e");
+      if (tg.setBackgroundColor) tg.setBackgroundColor("#08090e");
+    } catch (_) {}
+  }
+
+  const ICONS = {
+    lots: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>',
+    create: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+    wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M16 12h2"/><path d="M3 9h18"/></svg>',
+    profile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20c1.5-3.5 4.2-5 7-5s5.5 1.5 7 5"/></svg>',
+    admin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>'
+  };
+
+  function esc(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function fmt(n) {
+    const num = Math.round(Number(n) || 0);
+    return (num < 0 ? "−" : "") + Math.abs(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function fmtLeft(sec) {
+    const s = Math.max(0, Math.floor(Number(sec) || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    if (h > 0) return `${h}s ${String(m).padStart(2, "0")}m`;
+    return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+  }
+
+  function haptic(type = "light") {
+    try {
+      if (!tg || !tg.HapticFeedback) return;
+      if (type === "success" || type === "error" || type === "warning") {
+        tg.HapticFeedback.notificationOccurred(type);
+      } else {
+        tg.HapticFeedback.impactOccurred(type);
+      }
+    } catch (_) {}
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = String(msg || "");
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
+  }
+
+  // API URL aniqlash (agar ?api= berilsa yoki BACKEND_API bo'lsa o'shanga ulanadi, bo'lmasa GitHub ichida avtonom ishlaydi)
+  let API_BASE = BACKEND_API.trim().replace(/\/+$/, "");
+  const qApi = new URLSearchParams(location.search).get("api");
+  if (qApi) {
+    API_BASE = qApi.trim().replace(/\/+$/, "");
+    try { localStorage.setItem("api", API_BASE); } catch (_) {}
+  } else if (!API_BASE) {
+    try { API_BASE = (localStorage.getItem("api") || "").trim().replace(/\/+$/, ""); } catch (_) {}
+  }
+
+  const STORAGE_KEY = "auction_gh_data_v1";
+
+  function loadLocalDB() {
+    const tgUser = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+    const defaultName = tgUser && tgUser.first_name ? tgUser.first_name : "Bekhruz";
+    const defaultId = tgUser && tgUser.id ? tgUser.id : 872614139;
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.me) return parsed;
+      }
+    } catch (_) {}
+
+    const initial = {
+      me: {
+        id: defaultId,
+        name: defaultName,
+        phone: "+998 90 123 45 67",
+        captcha_ok: false,
+        balance: 250000,
+        admin: true,
+        bids_count: 2,
+        wins_count: 1,
+        banned: false
+      },
+      lots: [
+        {
+          id: 1,
+          title: "@uzb_market_lot",
+          category: "Username",
+          descr: "Qisqa va esda qolarli savdo username. Garov tugashi bilan darhol topshiriladi.",
+          current_price: 120000,
+          min_step: 10000,
+          leader_name: "Jasur",
+          bids: 6,
+          left_sec: 1850,
+          status: "active"
+        },
+        {
+          id: 2,
+          title: "VIP Savdo Kanali (4.8K)",
+          category: "Kanal",
+          descr: "Faol auditoriyaga ega tayyor kanal. Admin huquqi to‘liq o‘tkazib beriladi.",
+          current_price: 340000,
+          min_step: 20000,
+          leader_name: "Dilmurod",
+          bids: 9,
+          left_sec: 720,
+          status: "active"
+        },
+        {
+          id: 3,
+          title: "777 VIP Raqam",
+          category: "Raqam",
+          descr: "Chiroyli virtual raqam to‘plami. Xavfsiz kelishuv kafolati.",
+          current_price: 90000,
+          min_step: 5000,
+          leader_name: "Sardor",
+          bids: 4,
+          left_sec: 3400,
+          status: "active"
+        }
+      ],
+      tx: [
+        { a: 250000, n: "Start balansi", d: "Bugun" },
+        { a: -120000, n: "Garov: @uzb_market_lot", d: "Bugun" }
+      ],
+      users: [
+        { id: defaultId, name: defaultName, balance: 250000, banned: false },
+        { id: 551029384, name: "Jasur", balance: 180000, banned: false },
+        { id: 992837465, name: "Dilmurod", balance: 410000, banned: false }
+      ]
+    };
+    saveLocalDB(initial);
+    return initial;
+  }
+
+  function saveLocalDB(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (_) {}
+  }
+
+  const localDB = loadLocalDB();
+
+  async function localCall(name, body) {
+    await new Promise((r) => setTimeout(r, 120));
+    if (name === "me") return { ok: true, me: { ...localDB.me } };
+    if (name === "captcha/verify") {
+      localDB.me.captcha_ok = true;
+      if (body.name) {
+        localDB.me.name = body.name;
+        const u0 = localDB.users.find((u) => u.id === localDB.me.id);
+        if (u0) u0.name = body.name;
+      }
+      if (body.phone) localDB.me.phone = body.phone;
+      saveLocalDB(localDB);
+      return { ok: true, me: { ...localDB.me } };
+    }
+    if (name === "lots") {
+      return { ok: true, items: localDB.lots.filter((l) => l.status === "active") };
+    }
+    if (name === "lot/create") {
+      const lot = {
+        id: Date.now(),
+        title: body.title,
+        category: body.category || "Lot",
+        descr: body.descr || "",
+        current_price: Number(body.start_price) || 10000,
+        min_step: Number(body.min_step) || 5000,
+        leader_name: "—",
+        bids: 0,
+        left_sec: (Number(body.hours) || 2) * 3600,
+        status: "active"
+      };
+      localDB.lots.unshift(lot);
+      saveLocalDB(localDB);
+      return { ok: true, lot };
+    }
+    if (name === "bid") {
+      const lot = localDB.lots.find((x) => x.id === body.lot_id);
+      if (!lot || lot.status !== "active") return { ok: false, err: "Lot yakunlangan yoki topilmadi" };
+      const amt = Number(body.amount) || 0;
+      const minNeed = lot.current_price + lot.min_step;
+      if (amt < minNeed) return { ok: false, err: `Minimal garov: ${fmt(minNeed)} so‘m` };
+      if (localDB.me.balance < amt) return { ok: false, err: "Balans yetarli emas" };
+      localDB.me.balance -= amt;
+      const u0 = localDB.users.find((u) => u.id === localDB.me.id);
+      if (u0) u0.balance = localDB.me.balance;
+      lot.current_price = amt;
+      lot.leader_name = localDB.me.name;
+      lot.bids += 1;
+      if (lot.left_sec < 60) lot.left_sec += 60;
+      localDB.tx.unshift({ a: -amt, n: `Garov: ${lot.title}`, d: "Hozir" });
+      saveLocalDB(localDB);
+      return { ok: true, lot };
+    }
+    if (name === "wallet") return { ok: true, tx: localDB.tx };
+    if (name === "topup") {
+      const a = Math.max(1000, Number(body.amount) || 10000);
+      localDB.me.balance += a;
+      const u0 = localDB.users.find((u) => u.id === localDB.me.id);
+      if (u0) u0.balance = localDB.me.balance;
+      localDB.tx.unshift({ a, n: "Balans to‘ldirildi", d: "Hozir" });
+      saveLocalDB(localDB);
+      return { ok: true, balance: localDB.me.balance };
+    }
+    if (name === "admin/stats") {
+      const activeLots = localDB.lots.filter((l) => l.status === "active").length;
+      const volume = localDB.lots.reduce((acc, l) => acc + Number(l.current_price || 0), 0);
+      return {
+        ok: true,
+        s: {
+          users: localDB.users.length,
+          lots: localDB.lots.length,
+          active_lots: activeLots,
+          volume
+        }
+      };
+    }
+    if (name === "admin/lots") return { ok: true, items: localDB.lots };
+    if (name === "admin/lot/action") {
+      const idx = localDB.lots.findIndex((l) => l.id === body.id);
+      if (idx === -1) return { ok: false, err: "Lot topilmadi" };
+      if (body.act === "finish") localDB.lots[idx].status = "finished";
+      if (body.act === "delete") localDB.lots.splice(idx, 1);
+      saveLocalDB(localDB);
+      return { ok: true };
+    }
+    if (name === "admin/users") return { ok: true, items: localDB.users };
+    if (name === "admin/user/ban") {
+      const u = localDB.users.find((x) => x.id === body.id);
+      if (u) {
+        u.banned = !u.banned;
+        if (u.id === localDB.me.id) localDB.me.banned = u.banned;
+        saveLocalDB(localDB);
+      }
+      return { ok: true };
+    }
+    return { ok: false, err: "server" };
+  }
+
+  async function api(name, body = {}, opts = {}) {
+    // Agar API_BASE bo'sh bo'lsa, GitHub Pages'da mahalliy baza orqali ishlaydi
+    if (!API_BASE) return localCall(name, body);
+
+    let res;
+    try {
+      res = await fetch(`${API_BASE}/api/${name}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Init-Data": tg && tg.initData ? tg.initData : "",
+          "ngrok-skip-browser-warning": "1"
+        },
+        body: JSON.stringify(body)
+      });
+    } catch (_) {
+      // Server o'chiq bo'lsa ham ilova to'xtab qolmasligi uchun zaxira rejim
+      return localCall(name, body);
+    }
+    const data = await res.json().catch(() => ({ ok: false, err: "Server xatosi" }));
+    if (!data || data.ok !== true) {
+      const msg = (data && data.err) || "Xatolik yuz berdi";
+      if (!opts.silent) {
+        haptic("error");
+        toast(msg);
+      }
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // State
+  const state = {
+    me: null,
+    tab: "lots",
+    lots: [],
+    tx: [],
+    adminStats: null,
+    adminLots: [],
+    adminUsers: [],
+    captcha: { a: 3, b: 4, ans: 7, opts: [5, 7, 9], picked: null }
+  };
+
+  // Captcha generator
+  function genCaptcha() {
+    const a = Math.floor(Math.random() * 9) + 2;
+    const b = Math.floor(Math.random() * 9) + 2;
+    const ans = a + b;
+    const set = new Set([ans]);
+    while (set.size < 3) {
+      const cand = ans + (Math.floor(Math.random() * 7) - 3);
+      if (cand > 0 && cand !== ans) set.add(cand);
+    }
+    const opts = Array.from(set).sort(() => Math.random() - 0.5);
+    state.captcha = { a, b, ans, opts, picked: null };
+    renderCaptcha();
+  }
+
+  function renderCaptcha() {
+    const { a, b, opts, picked } = state.captcha;
+    document.getElementById("captchaEq").textContent = `${a} + ${b} = ?`;
+    const box = document.getElementById("captchaOpts");
+    box.innerHTML = opts.map((val) => `
+      <button type="button" class="cap-opt num ${picked === val ? "picked" : ""}" data-val="${val}">${val}</button>
+    `).join("");
+    box.querySelectorAll(".cap-opt").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        haptic("light");
+        state.captcha.picked = Number(btn.dataset.val);
+        renderCaptcha();
+      });
+    });
+  }
+
+  document.getElementById("refreshCaptchaBtn").addEventListener("click", () => {
+    haptic("light");
+    genCaptcha();
+  });
+
+  document.getElementById("verifyCaptchaBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("verifyCaptchaBtn");
+    if (state.captcha.picked !== state.captcha.ans) {
+      haptic("error");
+      toast("CAPTCHA javobi noto‘g‘ri");
+      genCaptcha();
+      return;
+    }
+    btn.disabled = true;
+    try {
+      const name = document.getElementById("regNameInput").value.trim();
+      const phone = document.getElementById("regPhoneInput").value.trim();
+      const res = await api("captcha/verify", {
+        a: state.captcha.a,
+        b: state.captcha.b,
+        answer: state.captcha.picked,
+        name,
+        phone
+      });
+      state.me = res.me;
+      haptic("success");
+      toast("Ro‘yxatdan o‘tildi!");
+      showMain();
+    } catch (_) {
+      genCaptcha();
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Sheet helpers
+  const sheetBackdrop = document.getElementById("sheetBackdrop");
+  const sheetTitle = document.getElementById("sheetTitle");
+  const sheetBody = document.getElementById("sheetBody");
+
+  function openSheet(title, html) {
+    haptic("light");
+    sheetTitle.textContent = title;
+    sheetBody.innerHTML = html;
+    sheetBackdrop.classList.add("open");
+  }
+
+  function closeSheet() {
+    sheetBackdrop.classList.remove("open");
+  }
+
+  document.getElementById("sheetClose").addEventListener("click", closeSheet);
+  sheetBackdrop.addEventListener("click", (e) => {
+    if (e.target === sheetBackdrop) closeSheet();
+  });
+
+  // Topbar & Nav
+  function updateHeader() {
+    const me = state.me;
+    if (!me) return;
+    document.getElementById("hdrAvatar").textContent = (me.name || "A").charAt(0).toUpperCase();
+    document.getElementById("hdrName").textContent = me.name || "Foydalanuvchi";
+    document.getElementById("hdrRole").textContent = me.admin ? "Administrator" : "Ishtirokchi";
+    document.getElementById("hdrBalance").textContent = `${fmt(me.balance)} so‘m`;
+  }
+
+  document.getElementById("hdrBalance").addEventListener("click", () => {
+    haptic("light");
+    state.tab = "wallet";
+    renderTab();
+  });
+
+  function renderNav() {
+    const nav = document.getElementById("bottomNav");
+    const inner = document.getElementById("navInner");
+    nav.classList.remove("hidden");
+
+    const tabs = [
+      { id: "lots", icon: ICONS.lots, label: "Lotlar" },
+      { id: "create", icon: ICONS.create, label: "Yaratish" },
+      { id: "wallet", icon: ICONS.wallet, label: "Hamyon" },
+      { id: "profile", icon: ICONS.profile, label: "Profil" }
+    ];
+    if (state.me && state.me.admin) {
+      tabs.push({ id: "admin", icon: ICONS.admin, label: "Admin" });
+    }
+
+    inner.innerHTML = tabs.map((t) => `
+      <button type="button" class="nav-btn ${state.tab === t.id ? "active" : ""}" data-tab="${t.id}">
+        ${t.icon}
+        <span>${esc(t.label)}</span>
+      </button>
+    `).join("");
+
+    inner.querySelectorAll(".nav-btn").forEach((b) => {
+      b.addEventListener("click", () => {
+        haptic("light");
+        state.tab = b.dataset.tab;
+        renderTab();
+      });
+    });
+  }
+
+  // Tabs
+  async function renderLots(box) {
+    box.innerHTML = `<div class="card">Yuklanmoqda…</div>`;
+    try {
+      const res = await api("lots");
+      state.lots = res.items || [];
+    } catch (_) {
+      return;
+    }
+
+    if (!state.lots.length) {
+      box.innerHTML = `<div class="card" style="text-align:center;"><div class="muted">Hozircha faol lotlar yo‘q</div></div>`;
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="sec-title"><span>⚡ Jonli auksionlar</span><span class="muted small num">${state.lots.length} ta</span></div>
+      ${state.lots.map((l, i) => {
+        const urgent = Number(l.left_sec) <= 120;
+        return `
+          <div class="lot-card" data-idx="${i}">
+            <div class="lot-head">
+              <span class="lot-tag">${esc(l.category || "Lot")}</span>
+              <span class="timer-badge num ${urgent ? "urgent" : ""}">⏱ ${esc(fmtLeft(l.left_sec))}</span>
+            </div>
+            <div class="lot-title">${esc(l.title)}</div>
+            <div class="lot-desc">${esc(l.descr || "")}</div>
+            <div class="lot-price-box">
+              <div>
+                <div class="muted small">Joriy garov</div>
+                <div class="lot-price num">${fmt(l.current_price)} so‘m</div>
+              </div>
+              <div class="lot-leader">
+                <div>Lider: <b>${esc(l.leader_name || "—")}</b></div>
+                <div class="small num">${Number(l.bids) || 0} ta garov · +${fmt(l.min_step)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    `;
+
+    box.querySelectorAll(".lot-card").forEach((el) => {
+      el.addEventListener("click", () => {
+        const lot = state.lots[Number(el.dataset.idx)];
+        if (lot) openLotSheet(lot);
+      });
+    });
+  }
+
+  function openLotSheet(lot) {
+    const minBid = Number(lot.current_price) + Number(lot.min_step);
+    openSheet(lot.title, `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span class="lot-tag">${esc(lot.category || "Lot")}</span>
+        <span class="timer-badge num">⏱ ${esc(fmtLeft(lot.left_sec))}</span>
+      </div>
+      <p class="muted small" style="margin-bottom:12px;">${esc(lot.descr || "")}</p>
+      <div class="lot-price-box" style="margin-top:0;">
+        <div>
+          <div class="muted small">Joriy narx</div>
+          <div class="lot-price num">${fmt(lot.current_price)} so‘m</div>
+        </div>
+        <div class="lot-leader">
+          <div>Lider: <b>${esc(lot.leader_name || "—")}</b></div>
+          <div class="small">Oxirgi 60s da garov = +60s</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="bidAmtInput">Garov summasi (min: ${fmt(minBid)} so‘m)</label>
+        <input id="bidAmtInput" class="input num" type="number" value="${minBid}" min="${minBid}" step="${Number(lot.min_step) || 1000}" />
+      </div>
+
+      <div class="row-3" style="margin-top:10px;">
+        <button type="button" class="btn btn-sec btn-sm q-bid num" data-add="0">+${fmt(lot.min_step)}</button>
+        <button type="button" class="btn btn-sec btn-sm q-bid num" data-add="${Number(lot.min_step) * 2}">+${fmt(Number(lot.min_step) * 3)}</button>
+        <button type="button" class="btn btn-sec btn-sm q-bid num" data-add="${Number(lot.min_step) * 5}">+${fmt(Number(lot.min_step) * 6)}</button>
+      </div>
+
+      <button id="placeBidBtn" type="button" class="btn btn-gold btn-block" style="margin-top:14px;">⚡ Garov tikish</button>
+    `);
+
+    const inp = document.getElementById("bidAmtInput");
+    sheetBody.querySelectorAll(".q-bid").forEach((b) => {
+      b.addEventListener("click", () => {
+        haptic("light");
+        inp.value = minBid + Number(b.dataset.add);
+      });
+    });
+
+    const bidBtn = document.getElementById("placeBidBtn");
+    bidBtn.addEventListener("click", async () => {
+      const amount = Number(inp.value) || 0;
+      bidBtn.disabled = true;
+      try {
+        await api("bid", { lot_id: lot.id, amount });
+        haptic("success");
+        closeSheet();
+        toast("Garov qabul qilindi!");
+        const meRes = await api("me", {}, { silent: true });
+        state.me = meRes.me;
+        updateHeader();
+        renderTab();
+      } catch (_) {}
+      bidBtn.disabled = false;
+    });
+  }
+
+  function renderCreate(box) {
+    box.innerHTML = `
+      <div class="sec-title"><span>➕ Yangi lot qo‘yish</span></div>
+      <div class="card">
+        <div class="field" style="margin-top:0;">
+          <label class="label" for="lotTitleInp">Lot nomi (masalan: @vip_user)</label>
+          <input id="lotTitleInp" class="input" type="text" placeholder="Noyob username yoki raqam" />
+        </div>
+        <div class="field">
+          <label class="label" for="lotCatSel">Kategoriya</label>
+          <select id="lotCatSel" class="select">
+            <option value="Username">Username</option>
+            <option value="Kanal">Kanal</option>
+            <option value="Raqam">Raqam</option>
+            <option value="Boshqa">Boshqa</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label" for="lotDescrInp">Tavsif</label>
+          <input id="lotDescrInp" class="input" type="text" placeholder="Qisqacha ma’lumot" />
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label class="label" for="lotStartInp">Boshlang‘ich narx</label>
+            <input id="lotStartInp" class="input num" type="number" value="25000" min="1000" />
+          </div>
+          <div class="field">
+            <label class="label" for="lotStepInp">Qadam (min oshirish)</label>
+            <input id="lotStepInp" class="input num" type="number" value="5000" min="500" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="lotHoursInp">Davomiyligi (soat)</label>
+          <input id="lotHoursInp" class="input num" type="number" value="6" min="1" max="168" />
+        </div>
+        <button id="createLotSubmit" type="button" class="btn btn-gold btn-block" style="margin-top:16px;">Auksionga qo‘yish</button>
+      </div>
+    `;
+
+    const subBtn = document.getElementById("createLotSubmit");
+    subBtn.addEventListener("click", async () => {
+      const title = document.getElementById("lotTitleInp").value.trim();
+      if (!title) {
+        toast("Lot nomini kiriting");
+        return;
+      }
+      subBtn.disabled = true;
+      try {
+        await api("lot/create", {
+          title,
+          category: document.getElementById("lotCatSel").value,
+          descr: document.getElementById("lotDescrInp").value.trim(),
+          start_price: Number(document.getElementById("lotStartInp").value) || 10000,
+          min_step: Number(document.getElementById("lotStepInp").value) || 5000,
+          hours: Number(document.getElementById("lotHoursInp").value) || 6
+        });
+        haptic("success");
+        toast("Lot joylashtirildi!");
+        state.tab = "lots";
+        renderTab();
+      } catch (_) {}
+      subBtn.disabled = false;
+    });
+  }
+
+  async function renderWallet(box) {
+    box.innerHTML = `<div class="card">Yuklanmoqda…</div>`;
+    try {
+      const res = await api("wallet");
+      state.tx = res.tx || [];
+    } catch (_) {
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="sec-title"><span>💳 Hamyon</span></div>
+      <div class="card">
+        <div class="muted small">Joriy balans</div>
+        <div class="lot-price num" style="font-size:26px;margin:4px 0 12px;">${fmt(state.me.balance)} so‘m</div>
+        <div class="row-3">
+          <button type="button" class="btn btn-sec btn-sm top-q num" data-a="25000">+25 000</button>
+          <button type="button" class="btn btn-sec btn-sm top-q num" data-a="50000">+50 000</button>
+          <button type="button" class="btn btn-gold btn-sm top-q num" data-a="100000">+100 000</button>
+        </div>
+      </div>
+
+      <div class="sec-title" style="margin-top:16px;"><span>Tarix</span></div>
+      <div class="card">
+        ${state.tx.length ? state.tx.map((t) => {
+          const a = Number(t.a) || 0;
+          return `
+            <div class="list-row">
+              <div>
+                <div style="font-weight:700;">${esc(t.n)}</div>
+                <div class="muted small">${esc(t.d)}</div>
+              </div>
+              <div class="num" style="font-weight:800;color:${a >= 0 ? "#86efac" : "#fca5a5"};">${a > 0 ? "+" : ""}${fmt(a)}</div>
+            </div>
+          `;
+        }).join("") : `<div class="muted small" style="text-align:center;">Operatsiyalar yo‘q</div>`}
+      </div>
+    `;
+
+    box.querySelectorAll(".top-q").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          const r = await api("topup", { amount: Number(btn.dataset.a) });
+          state.me.balance = r.balance;
+          updateHeader();
+          haptic("success");
+          toast("Balans to‘ldirildi");
+          renderWallet(box);
+        } catch (_) {}
+        btn.disabled = false;
+      });
+    });
+  }
+
+  function renderProfile(box) {
+    const me = state.me;
+    box.innerHTML = `
+      <div class="sec-title"><span>👤 Profil</span></div>
+      <div class="card">
+        <div class="list-row"><span class="muted">Ism</span><b>${esc(me.name)}</b></div>
+        <div class="list-row"><span class="muted">ID</span><b class="num">${esc(me.id)}</b></div>
+        <div class="list-row"><span class="muted">Telefon</span><b class="num">${esc(me.phone || "Ko‘rsatilmagan")}</b></div>
+        <div class="list-row"><span class="muted">CAPTCHA</span><b>Tasdiqlangan ✅</b></div>
+      </div>
+      <button id="resetDemoBtn" type="button" class="btn btn-sec btn-block" style="margin-top:12px;">🔄 CAPTCHA qayta tekshirish</button>
+    `;
+    document.getElementById("resetDemoBtn").addEventListener("click", () => {
+      localDB.me.captcha_ok = false;
+      saveLocalDB(localDB);
+      location.reload();
+    });
+  }
+
+  // Full Admin Panel
+  async function renderAdmin(box) {
+    if (!state.me || !state.me.admin) {
+      state.tab = "lots";
+      return renderTab();
+    }
+    box.innerHTML = `<div class="card">Admin ma’lumotlari yuklanmoqda…</div>`;
+    try {
+      const [stRes, lotsRes, usersRes] = await Promise.all([
+        api("admin/stats"),
+        api("admin/lots"),
+        api("admin/users")
+      ]);
+      state.adminStats = stRes.s || {};
+      state.adminLots = lotsRes.items || [];
+      state.adminUsers = usersRes.items || [];
+    } catch (_) {
+      return;
+    }
+
+    const s = state.adminStats;
+    box.innerHTML = `
+      <div class="sec-title"><span>🛡️ Admin boshqaruv paneli</span></div>
+
+      <div class="stats-grid">
+        <div class="stat-box"><div class="muted small">Foydalanuvchilar</div><div class="stat-val num">${fmt(s.users)}</div></div>
+        <div class="stat-box"><div class="muted small">Jami lotlar</div><div class="stat-val num">${fmt(s.lots)}</div></div>
+        <div class="stat-box"><div class="muted small">Faol lotlar</div><div class="stat-val num">${fmt(s.active_lots)}</div></div>
+        <div class="stat-box"><div class="muted small">Savdo aylanmasi</div><div class="stat-val num">${fmt(s.volume)}</div></div>
+      </div>
+
+      <div class="sec-title" style="margin-top:16px;"><span>Lotlarni boshqarish</span></div>
+      <div class="card">
+        ${state.adminLots.length ? state.adminLots.map((l) => `
+          <div class="list-row">
+            <div style="min-width:0;">
+              <div style="font-weight:800;">${esc(l.title)} <span class="muted small">(${esc(l.status)})</span></div>
+              <div class="muted small num">${fmt(l.current_price)} so‘m · Lider: ${esc(l.leader_name || "—")}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0;">
+              ${l.status === "active" ? `<button type="button" class="btn btn-ok btn-sm adm-lot-act" data-id="${l.id}" data-act="finish">Yakunlash</button>` : ""}
+              <button type="button" class="btn btn-bad btn-sm adm-lot-act" data-id="${l.id}" data-act="delete">✕</button>
+            </div>
+          </div>
+        `).join("") : `<div class="muted small">Lotlar yo‘q</div>`}
+      </div>
+
+      <div class="sec-title" style="margin-top:16px;"><span>Foydalanuvchilar</span></div>
+      <div class="card">
+        ${state.adminUsers.map((u) => `
+          <div class="list-row">
+            <div>
+              <div style="font-weight:800;">${esc(u.name)} <span class="muted small num">#${esc(u.id)}</span></div>
+              <div class="muted small num">Balans: ${fmt(u.balance)} so‘m</div>
+            </div>
+            <button type="button" class="btn ${u.banned ? "btn-ok" : "btn-bad"} btn-sm adm-ban-btn" data-id="${u.id}">
+              ${u.banned ? "Ochish" : "Ban"}
+            </button>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    box.querySelectorAll(".adm-lot-act").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          await api("admin/lot/action", { id: Number(btn.dataset.id) || btn.dataset.id, act: btn.dataset.act });
+          haptic("success");
+          toast("Yangilandi");
+          renderAdmin(box);
+        } catch (_) {}
+        btn.disabled = false;
+      });
+    });
+
+    box.querySelectorAll(".adm-ban-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          await api("admin/user/ban", { id: Number(btn.dataset.id) || btn.dataset.id });
+          haptic("success");
+          toast("Holat o‘zgartirildi");
+          renderAdmin(box);
+        } catch (_) {}
+        btn.disabled = false;
+      });
+    });
+  }
+
+  async function renderTab() {
+    renderNav();
+    const box = document.getElementById("tabContent");
+    if (state.tab === "lots") await renderLots(box);
+    else if (state.tab === "create") renderCreate(box);
+    else if (state.tab === "wallet") await renderWallet(box);
+    else if (state.tab === "profile") renderProfile(box);
+    else if (state.tab === "admin") await renderAdmin(box);
+  }
+
+  function showMain() {
+    document.getElementById("captchaGate").classList.add("hidden");
+    document.getElementById("mainApp").classList.remove("hidden");
+    updateHeader();
+    renderTab();
+  }
+
+  async function boot() {
+    try {
+      const res = await api("me");
+      state.me = res.me;
+      if (state.me.banned) {
+        toast("Akkaunt bloklangan");
+        return;
+      }
+      if (!state.me.captcha_ok) {
+        document.getElementById("captchaGate").classList.remove("hidden");
+        document.getElementById("regNameInput").value = state.me.name || "";
+        genCaptcha();
+        return;
+      }
+      showMain();
+    } catch (_) {
+      document.getElementById("captchaGate").classList.remove("hidden");
+      genCaptcha();
+    }
+  }
+
+  // Jonli taymer har soniya yangilanadi
+  setInterval(() => {
+    if (!state.lots.length || state.tab !== "lots") return;
+    let changed = false;
+    state.lots.forEach((l) => {
+      if (l.status === "active" && l.left_sec > 0) {
+        l.left_sec -= 1;
+        changed = true;
+      }
+    });
+    if (changed) {
+      document.querySelectorAll(".lot-card .timer-badge").forEach((el, idx) => {
+        const l = state.lots[idx];
+        if (l) {
+          el.textContent = `⏱ ${fmtLeft(l.left_sec)}`;
+          el.classList.toggle("urgent", Number(l.left_sec) <= 120);
+        }
+      });
+    }
+  }, 1000);
+
+  boot();
+})();
+</script>
+</body>
+</html>
